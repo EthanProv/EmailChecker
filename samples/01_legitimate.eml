@@ -1,0 +1,13 @@
+From: Equipo <equipo@enti.example>
+To: alumno@empresa.lab
+Reply-To: equipo@enti.example
+Return-Path: <equipo@enti.example>
+Subject: =?utf-8?q?Reuni=C3=B3n?= del proyecto
+Date: Mon, 26 Oct 2026 12:00:00 +0100
+Message-ID: <lab-01@enti.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+
+SG9sYSBlcXVpcG8sIG5vcyB2ZW1vcyBtYcOxYW5hIGEgbGFzIGRpZXogcGFyYSByZXZpc2FyIGVs
+IGluZm9ybWUuIEdyYWNpYXMuDQo=

@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+results/cache.sqlite*
+results/*
+!results/review-real/
+!results/review-docker-tests.txt
+mail-data/
+mail-config/
+tmp/

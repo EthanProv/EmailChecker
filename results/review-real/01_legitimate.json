@@ -1,0 +1,53 @@
+{
+  "id": "01_legitimate",
+  "message_sha256": "920eb1f6bb8ef61eb907d62f2f672b817cbe02c023a46f2695feb7c8e33c4a65",
+  "expected": "sin_indicios_suficientes",
+  "classification": "sin_indicios_suficientes",
+  "decision": "permitir",
+  "reasons": [
+    "Sin señales suficientes según política académica v1; no garantiza seguridad"
+  ],
+  "seconds": 4.441,
+  "static": {
+    "headers": {
+      "Subject": "Reunión del proyecto",
+      "From": "Equipo <equipo@enti.example>",
+      "Reply-To": "equipo@enti.example",
+      "Return-Path": "<equipo@enti.example>",
+      "Message-ID": "<lab-01@enti.example>"
+    },
+    "text": "Hola equipo, nos vemos mañana a las diez para revisar el informe. Gracias.\r\n",
+    "html": "",
+    "urls": [],
+    "attachments": [],
+    "incomplete": []
+  },
+  "ai": {
+    "status": "ok",
+    "classification": "sin_indicios_suficientes",
+    "model": "qwen3:4b",
+    "reasons": [
+      "El correo no presenta indicadores de phishing como enlaces sospechosos o solicitudes de credenciales"
+    ],
+    "evidence": [
+      "Hola equipo, nos vemos mañana a las diez para revisar el informe. Gracias."
+    ],
+    "config": {
+      "temperature": 0,
+      "num_ctx": 8192,
+      "num_predict": 700,
+      "think": false
+    },
+    "model_digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+    "ollama_version": "0.40.11",
+    "raw_model_response": "{\n  \"classification\": \"sin_indicios_suficientes\",\n  \"reasons\": [\n    \"El correo no presenta indicadores de phishing como enlaces sospechosos o solicitudes de credenciales\"\n  ],\n  \"evidence\": [\n    \"Hola equipo, nos vemos mañana a las diez para revisar el informe. Gracias.\"\n  ]\n}"
+  },
+  "reputation": {
+    "status": "disabled_demo",
+    "items": [],
+    "note": "Sin consultas; no son resultados limpios ni simulados."
+  },
+  "policy_version": "academic-v1",
+  "execution": "real_local_inference",
+  "intercepts_delivery": false
+}

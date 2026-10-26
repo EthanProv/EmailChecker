@@ -1,0 +1,27 @@
+From: Equipo <equipo@enti.example>
+To: alumno@empresa.lab
+Reply-To: equipo@enti.example
+Return-Path: <equipo@enti.example>
+Subject: =?utf-8?q?Informaci=C3=B3n_acad=C3=A9mica?=
+Date: Mon, 26 Oct 2026 12:00:00 +0100
+Message-ID: <lab-06@enti.example>
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="===============9047525472329004073=="
+
+--===============9047525472329004073==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+
+SW5mb3JtYWNpw7NuIGRlIGxhIHNlc2nDs246IHJldmlzacOzbiBkZSBkb2N1bWVudGFjacOzbiBt
+YcOxYW5hLg0K
+
+--===============9047525472329004073==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<p>Informaci=C3=B3n de la sesi=C3=B3n: revisi=C3=B3n de documentaci=C3=B3n ma=
+=C3=B1ana.</p>
+
+--===============9047525472329004073==--

@@ -1,0 +1,30 @@
+ Container antiphishing-local-ollama-1 Running 
+ Container antiphishing-local-ollama-1 Waiting 
+ Container antiphishing-local-ollama-1 Healthy 
+ Container antiphishing-local-analyzer-run-b9547a7c66ac Creating 
+ Container antiphishing-local-analyzer-run-b9547a7c66ac Created 
+test_alternatives_not_duplicated (test_analyzer.AnalyzerTests.test_alternatives_not_duplicated) ... ok
+test_cloud_rejected (test_analyzer.AnalyzerTests.test_cloud_rejected) ... ok
+test_decoded_hash (test_analyzer.AnalyzerTests.test_decoded_hash) ... ok
+test_different_html_content_preserved (test_analyzer.AnalyzerTests.test_different_html_content_preserved) ... ok
+test_evidence_decodes_json_escapes (test_analyzer.AnalyzerTests.test_evidence_decodes_json_escapes) ... ok
+test_generic_link_not_mismatch (test_analyzer.AnalyzerTests.test_generic_link_not_mismatch) ... ok
+test_limits (test_analyzer.AnalyzerTests.test_limits) ... ok
+test_mismatch (test_analyzer.AnalyzerTests.test_mismatch) ... ok
+test_missing_model (test_analyzer.AnalyzerTests.test_missing_model) ... ok
+test_mock_ai_total_budget_includes_metadata (test_analyzer.AnalyzerTests.test_mock_ai_total_budget_includes_metadata) ... ok
+test_mock_invalid_model_response (test_analyzer.AnalyzerTests.test_mock_invalid_model_response) ... ok
+test_mock_invalid_reputation_never_clean (test_analyzer.AnalyzerTests.test_mock_invalid_reputation_never_clean) ... ok
+test_mock_timeout_never_allow (test_analyzer.AnalyzerTests.test_mock_timeout_never_allow) ... ok
+test_reputation_disabled_no_network (test_analyzer.AnalyzerTests.test_reputation_disabled_no_network) ... ok
+test_reputation_missing_key (test_analyzer.AnalyzerTests.test_reputation_missing_key) ... ok
+test_valid_and_invalid_schema (test_analyzer.AnalyzerTests.test_valid_and_invalid_schema) ... ok
+test_allow_without_reinjection (test_milter.MilterTests.test_allow_without_reinjection) ... ok
+{"queue_id": "unknown", "decision": "permitir", "seconds": 0.0002368280001974199}
+{"queue_id": "unknown", "decision": "cuarentena", "seconds": 0.0002066369997919537}
+test_hold_action (test_milter.MilterTests.test_hold_action) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.402s
+
+OK

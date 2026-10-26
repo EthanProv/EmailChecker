@@ -1,0 +1,73 @@
+{
+  "id": "02_attachment",
+  "message_sha256": "0f0d13af1b62981d508d79ec4d0227144b97f6df868f3bb2339eb91c72b402a7",
+  "expected": "sin_indicios_suficientes",
+  "classification": "sin_indicios_suficientes",
+  "decision": "permitir",
+  "reasons": [
+    "Sin señales suficientes según política académica v1; no garantiza seguridad"
+  ],
+  "seconds": 1.365,
+  "static": {
+    "headers": {
+      "Subject": "Acta de reunión",
+      "From": "Equipo <equipo@enti.example>",
+      "Reply-To": "equipo@enti.example",
+      "Return-Path": "<equipo@enti.example>",
+      "Message-ID": "<lab-02@enti.example>"
+    },
+    "text": "Adjunto el acta. Documentación: https://docs.example/proyecto\r\n",
+    "html": "<p>Documentación: <a href=\"https://docs.example/proyecto\">pulsa aquí</a></p>\r\n",
+    "urls": [
+      {
+        "href": "https://docs.example/proyecto",
+        "visible": "pulsa aquí",
+        "mismatch": false
+      }
+    ],
+    "attachments": [
+      {
+        "name": "acta.txt",
+        "size": 37,
+        "sha256": "e1314d64d34462ebcc75a32e694a3d6f4a3272a95386d9816d6b5aa219ba833c"
+      }
+    ],
+    "incomplete": [],
+    "alternative_html_text": "Documentación:  pulsa aquí \r\n"
+  },
+  "ai": {
+    "status": "ok",
+    "classification": "sin_indicios_suficientes",
+    "model": "qwen3:4b",
+    "reasons": [
+      "El correo no muestra evidencia de compromiso o actividades sospechosas en los headers"
+    ],
+    "evidence": [
+      "Acta de reunión",
+      "Equipo <equipo@enti.example>",
+      "equipo@enti.example",
+      "lab-02@enti.example",
+      "Adjunto el acta. Documentación: https://docs.example/proyecto",
+      "https://docs.example/proyecto",
+      "pulsa aquí",
+      "e1314d64d34462ebcc75a32e694a3d6f4a3272a95386d9816d6b5aa219ba833c"
+    ],
+    "config": {
+      "temperature": 0,
+      "num_ctx": 8192,
+      "num_predict": 700,
+      "think": false
+    },
+    "model_digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+    "ollama_version": "0.40.11",
+    "raw_model_response": "{\n  \"classification\": \"sin_indicios_suficientes\",\n  \"reasons\": [\n    \"El correo no muestra evidencia de compromiso o actividades sospechosas en los headers\"\n  ],\n  \"evidence\": [\n    \"Acta de reunión\",\n    \"Equipo <equipo@enti.example>\",\n    \"equipo@enti.example\",\n    \"lab-02@enti.example\",\n    \"Adjunto el acta. Documentación: https://docs.example/proyecto\",\n    \"https://docs.example/proyecto\",\n    \"pulsa aquí\",\n    \"e1314d64d34462ebcc75a32e694a3d6f4a3272a95386d9816d6b5aa219ba833c\"\n  ]\n}"
+  },
+  "reputation": {
+    "status": "disabled_demo",
+    "items": [],
+    "note": "Sin consultas; no son resultados limpios ni simulados."
+  },
+  "policy_version": "academic-v1",
+  "execution": "real_local_inference",
+  "intercepts_delivery": false
+}

@@ -1,0 +1,40 @@
+From: Equipo <equipo@enti.example>
+To: alumno@empresa.lab
+Reply-To: equipo@enti.example
+Return-Path: <equipo@enti.example>
+Subject: Acta de =?utf-8?q?reuni=C3=B3n?=
+Date: Mon, 26 Oct 2026 12:00:00 +0100
+Message-ID: <lab-02@enti.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============0128825248486913832=="
+
+--===============0128825248486913832==
+Content-Type: multipart/alternative;
+ boundary="===============0912279056549390095=="
+
+--===============0912279056549390095==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+
+QWRqdW50byBlbCBhY3RhLiBEb2N1bWVudGFjacOzbjogaHR0cHM6Ly9kb2NzLmV4YW1wbGUvcHJv
+eWVjdG8NCg==
+
+--===============0912279056549390095==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<p>Documentaci=C3=B3n: <a href=3D"https://docs.example/proyecto">pulsa aqu=C3=
+=AD</a></p>
+
+--===============0912279056549390095==--
+
+--===============0128825248486913832==
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="acta.txt"
+MIME-Version: 1.0
+
+QWN0YSBkZSBsYWJvcmF0b3Jpby4gQXJjaGl2byBpbm9jdW8uCg==
+
+--===============0128825248486913832==--

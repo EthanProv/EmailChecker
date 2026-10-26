@@ -1,0 +1,6 @@
+.git
+.env
+results
+mail-data
+mail-config
+__pycache__

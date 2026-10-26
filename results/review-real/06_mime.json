@@ -1,0 +1,53 @@
+{
+  "id": "06_mime",
+  "message_sha256": "26340c3e70b348563cd60435feda28348e6603afefa0c65e3f15d8d2c8fe9eb6",
+  "expected": "sin_indicios_suficientes",
+  "classification": "sin_indicios_suficientes",
+  "decision": "permitir",
+  "reasons": [
+    "Sin señales suficientes según política académica v1; no garantiza seguridad"
+  ],
+  "seconds": 0.625,
+  "static": {
+    "headers": {
+      "Subject": "Información académica",
+      "From": "Equipo <equipo@enti.example>",
+      "Reply-To": "equipo@enti.example",
+      "Return-Path": "<equipo@enti.example>",
+      "Message-ID": "<lab-06@enti.example>"
+    },
+    "text": "Información de la sesión: revisión de documentación mañana.\r\n",
+    "html": "<p>Información de la sesión: revisión de documentación mañana.</p>\r\n",
+    "urls": [],
+    "attachments": [],
+    "incomplete": []
+  },
+  "ai": {
+    "status": "ok",
+    "classification": "sin_indicios_suficientes",
+    "model": "qwen3:4b",
+    "reasons": [
+      "El correo no contiene información que indique una petición de credenciales"
+    ],
+    "evidence": [
+      "Información de la sesión: revisión de documentación mañana."
+    ],
+    "config": {
+      "temperature": 0,
+      "num_ctx": 8192,
+      "num_predict": 700,
+      "think": false
+    },
+    "model_digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+    "ollama_version": "0.40.11",
+    "raw_model_response": "{\n  \"classification\": \"sin_indicios_suficientes\",\n  \"reasons\": [\n    \"El correo no contiene información que indique una petición de credenciales\"\n  ],\n  \"evidence\": [\n    \"Información de la sesión: revisión de documentación mañana.\"\n  ]\n}"
+  },
+  "reputation": {
+    "status": "disabled_demo",
+    "items": [],
+    "note": "Sin consultas; no son resultados limpios ni simulados."
+  },
+  "policy_version": "academic-v1",
+  "execution": "real_local_inference",
+  "intercepts_delivery": false
+}

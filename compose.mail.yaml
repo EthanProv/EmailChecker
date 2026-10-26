@@ -1,0 +1,61 @@
+services:
+  mailserver:
+    image: ghcr.io/docker-mailserver/docker-mailserver@sha256:d0fe7668defe157aad57ea31b1707ad1e2fb57d7a91bdf17cbdf876549946c86
+    hostname: mail.empresa.lab
+    environment:
+      SSL_TYPE: manual
+      SSL_CERT_PATH: /tmp/docker-mailserver/cert.pem
+      SSL_KEY_PATH: /tmp/docker-mailserver/key.pem
+      PERMIT_DOCKER: none
+      ENABLE_RSPAMD: '1'
+      ENABLE_CLAMAV: '0'
+      ENABLE_FAIL2BAN: '0'
+      POSTFIX_MESSAGE_SIZE_LIMIT: '10485760'
+      TZ: Europe/Madrid
+    ports:
+      - '127.0.0.1:2525:25'
+      - '[::1]:2525:25'
+      - '127.0.0.1:1587:587'
+      - '[::1]:1587:587'
+      - '127.0.0.1:465:465'
+      - '[::1]:465:465'
+      - '127.0.0.1:1143:143'
+      - '[::1]:1143:143'
+      - '127.0.0.1:1993:993'
+      - '[::1]:1993:993'
+    volumes:
+      - mail:/var/mail
+      - mail-state:/var/mail-state
+      - mail-logs:/var/log/mail
+      - ./mail-config:/tmp/docker-mailserver
+    restart: unless-stopped
+    depends_on:
+      milter:
+        condition: service_healthy
+  milter:
+    build: .
+    environment:
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:4b}
+      AI_TIMEOUT: '25'
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import socket; socket.create_connection(('127.0.0.1', 9900), 2).close()"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 180s
+    volumes:
+      - ./results:/app/results
+    command: ['python', '-m', 'antiphishing.milter']
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    restart: unless-stopped
+volumes:
+  mail:
+  mail-state:
+  mail-logs:

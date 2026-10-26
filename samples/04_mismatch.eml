@@ -1,0 +1,25 @@
+From: Equipo <equipo@enti.example>
+To: alumno@empresa.lab
+Reply-To: equipo@enti.example
+Return-Path: <equipo@enti.example>
+Subject: Verifica tu acceso
+Date: Mon, 26 Oct 2026 12:00:00 +0100
+Message-ID: <lab-04@enti.example>
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="===============9090616043649320732=="
+
+--===============9090616043649320732==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+
+Q29uc3VsdGEgZWwgZW5sYWNlIGRlIGFjY2Vzby4NCg==
+
+--===============9090616043649320732==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<a href=3D"https://fraude.example/login">https://banco.example/login</a>
+
+--===============9090616043649320732==--
