@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 from leer_correo import MAX_MESSAGE
 from analizar import revisar_correo
+from reputacion import Reputation
 
 class Handler(socketserver.StreamRequestHandler):
     timeout = 40
@@ -67,7 +68,11 @@ class Handler(socketserver.StreamRequestHandler):
                     too_large = True
             elif command == b'E':
                 try:
-                    event = revisar_correo(bytes(raw), demasiado_grande=too_large)
+                    reputacion = Reputation()
+                    try:
+                        event = revisar_correo(bytes(raw), reputacion, demasiado_grande=too_large)
+                    finally:
+                        reputacion.db.close()
                     digest = hashlib.sha256(raw).hexdigest()
                     event['queue_id'] = macros.get('i', macros.get('{i}', 'unknown'))
                     event['envelope'] = envelope

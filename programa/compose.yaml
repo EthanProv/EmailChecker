@@ -79,6 +79,9 @@ services:
       OLLAMA_URL: http://ollama:11434
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:4b}
       AI_TIMEOUT: '25'
+      REPUTATION_HASHES: ${REPUTATION_HASHES:-0}
+      REPUTATION_URLS: ${REPUTATION_URLS:-0}
+      VT_API_KEY: ${VT_API_KEY:-}
     depends_on:
       ollama:
         condition: service_healthy

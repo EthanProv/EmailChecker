@@ -1,7 +1,10 @@
 param([string]$Action = 'menu', [switch]$Cpu)
 Set-Location (Split-Path $PSScriptRoot -Parent)
 $compose = @('compose','-f','programa/compose.yaml')
-if (-not $Cpu) { $compose += @('-f','programa/compose.gpu.yaml') }
+$instalado = Join-Path (Get-Location) 'datos/cuentas/instalacion.json'
+$gpu = [bool](Get-Command nvidia-smi -ErrorAction SilentlyContinue)
+if (Test-Path $instalado) { $gpu = [bool](Get-Content -Raw $instalado | ConvertFrom-Json).gpu }
+if (-not $Cpu -and $gpu) { $compose += @('-f','programa/compose.gpu.yaml') }
 $datos = Join-Path (Get-Location) 'datos'
 $log = Join-Path $datos 'resultados/operaciones.log'
 New-Item -ItemType Directory -Force -Path (Split-Path $log) | Out-Null
@@ -56,10 +59,40 @@ function Iniciar {
     Write-Host 'EmailChecker esta listo.' -ForegroundColor Green
 }
 
+function Configurar-VirusTotal {
+    $segura = Read-Host 'Pega tu clave API de VirusTotal (no se mostrara)' -AsSecureString
+    $puntero = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($segura)
+    try {
+        $clave = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($puntero)
+        if ($clave -notmatch '^[A-Za-z0-9_-]{16,200}$') { throw 'La clave tiene un formato invalido.' }
+        $enlaces = '0'
+        if ((Read-Host 'Consultar tambien enlaces? Se enviaran sus URLs completas a VirusTotal. s/N') -eq 's') { $enlaces = '1' }
+        $ruta = Join-Path $PSScriptRoot '.env'
+        $lineas = @()
+        if (Test-Path $ruta) { $lineas = @(Get-Content $ruta) }
+        $lineas = @($lineas | Where-Object { $_ -notmatch '^\s*(?:export\s+)?(VT_API_KEY|REPUTATION_HASHES|REPUTATION_URLS)\s*=' })
+        $lineas += @("VT_API_KEY=$clave", 'REPUTATION_HASHES=1', "REPUTATION_URLS=$enlaces")
+        [IO.File]::WriteAllLines($ruta, [string[]]$lineas, [Text.UTF8Encoding]::new($false))
+    } finally {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($puntero)
+        $clave = $null
+        $segura.Dispose()
+    }
+    Iniciar
+    Write-Host 'VirusTotal configurado para adjuntos y las opciones elegidas.' -ForegroundColor Green
+}
+
 function Ejecutar {
     param([string]$Opcion)
     switch ($Opcion) {
         'start' { Iniciar }
+        'thunderbird' {
+            if (-not (Test-Path $instalado)) { throw 'Primero ejecuta EmailChecker.cmd install.' }
+            Iniciar
+            $configuracion = Get-Content -Raw $instalado | ConvertFrom-Json
+            & (Join-Path $PSScriptRoot 'thunderbird.ps1') -ThunderbirdExe $configuracion.thunderbird -SoloAbrir
+        }
+        'virustotal' { Configurar-VirusTotal }
         'analyze' {
             Iniciar
             Ejecutar-Docker ($compose + @('run','--rm','--no-deps','analyzer','python','analizar.py'))
@@ -86,10 +119,10 @@ if ($Action -ne 'menu') {
     try { Ejecutar $Action; exit 0 } catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }
 }
 while ($true) {
-    Write-Host "`nEmailChecker`n1. Iniciar`n2. Probar`n3. Analizar archivos`n4. Ver informe`n5. Ver cuarentena`n6. Detener`n0. Salir"
+    Write-Host "`nEmailChecker`n1. Iniciar`n2. Probar`n3. Analizar archivos`n4. Ver informe`n5. Ver cuarentena`n6. Detener`n7. Configurar VirusTotal`n8. Abrir correo en Thunderbird`n0. Salir"
     $opcion = Read-Host 'Elige un numero'
     if ($opcion -eq '0') { exit 0 }
-    $acciones = @{'1'='start';'2'='check';'3'='analyze';'4'='results';'5'='queue';'6'='stop'}
+    $acciones = @{'1'='start';'2'='check';'3'='analyze';'4'='results';'5'='queue';'6'='stop';'7'='virustotal';'8'='thunderbird'}
     if ($acciones.ContainsKey($opcion)) {
         try { Ejecutar $acciones[$opcion] } catch { Write-Host $_.Exception.Message -ForegroundColor Red }
         Read-Host 'Pulsa Intro para volver al menu' | Out-Null

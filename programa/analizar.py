@@ -18,10 +18,12 @@ def decidir(correo, ia, reputacion):
             return 'cuarentena', ['La reputacion indica una posible amenaza.']
     if ia['status'] == 'ok' and ia['classification'] == 'sospechoso':
         return 'cuarentena', ia['reasons']
+    if reputacion['status'] == 'unknown':
+        return 'pendiente de revisión', ['VirusTotal no tiene un informe para este archivo o enlace.']
+    if reputacion['status'] == 'unavailable':
+        return 'pendiente de revisión', ['No se ha podido consultar la reputacion: falta clave, cuota o conexion.']
     if correo['incomplete'] or ia['status'] != 'ok' or ia['classification'] == 'indeterminado':
         return 'pendiente de revisión', ['No se ha podido completar el analisis.']
-    if reputacion['status'] == 'unavailable':
-        return 'pendiente de revisión', ['No se ha podido consultar la reputacion.']
     return 'permitir', ['No se han encontrado señales suficientes de phishing.']
 
 
@@ -38,7 +40,7 @@ def revisar_correo(raw, reputacion=None, demasiado_grande=False):
     elif not correo['incomplete']:
         ia = analyze(correo)
 
-    # 3. Consultar reputacion si se ha activado. El servidor usa reglas e IA local.
+    # 3. Consultar reputacion si se ha activado, tambien en el servidor.
     rep = {'status': 'disabled_demo', 'items': []}
     if reputacion is not None:
         rep = reputacion.analyze(correo)
