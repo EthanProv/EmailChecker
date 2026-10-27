@@ -1,6 +1,6 @@
-"""Minimal Milter v6: explicit quarantine in Postfix HOLD, no reinjection.
+"""Recibir correos desde Postfix y pedir que retenga los sospechosos.
 
-Bounded serial server for a local academic lab, not a production Milter.
+Los mensajes se revisan de uno en uno y quedan en la cola HOLD de Postfix.
 """
 import hashlib
 import json
@@ -9,9 +9,8 @@ import socketserver
 import struct
 import time
 from pathlib import Path
-from .parser import parse, MAX_MESSAGE
-from .ai import analyze
-from .policy import decide
+from leer_correo import MAX_MESSAGE
+from analizar import revisar_correo
 
 class Handler(socketserver.StreamRequestHandler):
     timeout = 40
@@ -25,8 +24,6 @@ class Handler(socketserver.StreamRequestHandler):
         too_large = False
         while True:
             header = self.rfile.read(4)
-            if not header:
-                return
             if len(header) != 4:
                 return
             size = struct.unpack('!I', header)[0]
@@ -69,30 +66,23 @@ class Handler(socketserver.StreamRequestHandler):
                 else:
                     too_large = True
             elif command == b'E':
-                start = time.monotonic()
                 try:
-                    parsed = parse(bytes(raw))
-                    if too_large:
-                        parsed['incomplete'].append('message_size_limit')
-                    ai = analyze(parsed) if not parsed['incomplete'] else {'status': 'skipped_incomplete', 'classification': 'indeterminado'}
-                    rep = {'status': 'disabled_demo', 'items': []}
-                    decision, reasons = decide(parsed, ai, rep)
+                    event = revisar_correo(bytes(raw), demasiado_grande=too_large)
                     digest = hashlib.sha256(raw).hexdigest()
-                    event = {'queue_id': macros.get('i', macros.get('{i}', 'unknown')), 'sha256': digest,
-                             'envelope': envelope, 'decision': decision, 'reasons': reasons, 'ai': ai,
-                             'static': parsed, 'reputation': rep, 'seconds': time.monotonic() - start,
-                             'intercepts_delivery': True, 'quarantine_backend': 'Postfix HOLD', 'timestamp': time.time()}
-                    folder = Path('results/mail')
+                    event['queue_id'] = macros.get('i', macros.get('{i}', 'unknown'))
+                    event['envelope'] = envelope
+                    event['timestamp'] = time.time()
+                    folder = Path('results/correos')
                     folder.mkdir(parents=True, exist_ok=True)
                     target = folder / (str(time.time_ns()) + '-' + digest[:12] + '.json')
                     with target.open('x', encoding='utf-8') as file:
                         json.dump(event, file, ensure_ascii=False, indent=2)
                         file.flush()
                         os.fsync(file.fileno())
-                    if decision != 'permitir':
-                        self.send(b'q', ('academic-v1 ' + decision + ' audit=' + target.name).encode() + b'\0')
+                    if event['decision'] != 'permitir':
+                        self.send(b'q', ('EmailChecker ' + event['decision'] + ' audit=' + target.name).encode() + b'\0')
                     self.send(b'c')
-                    print(json.dumps({k: event[k] for k in ('queue_id', 'decision', 'seconds')}), flush=True)
+                    print(event['queue_id'] + ': ' + event['decision'], flush=True)
                 except Exception as exc:
                     print(type(exc).__name__, flush=True)
                     self.send(b't')
@@ -104,7 +94,7 @@ class Server(socketserver.TCPServer):
     request_queue_size = 5
 
 if __name__ == '__main__':
-    from .warmup import warmup
+    from inteligencia import warmup
     try:
         warmup()
         print('Local model ready; keep_alive=24h', flush=True)

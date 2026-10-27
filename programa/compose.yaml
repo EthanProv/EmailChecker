@@ -1,7 +1,48 @@
+name: antiphishing-local
 services:
+  ollama:
+    image: ${OLLAMA_IMAGE:-ollama/ollama@sha256:dea72d1e22270fe095b68fdf756d2b489d615643c5a2eaebbc5f569181e322d8}
+    environment:
+      OLLAMA_NO_CLOUD: '1'
+      OLLAMA_NUM_PARALLEL: '1'
+    volumes:
+      - models:/root/.ollama
+    ports:
+      - '127.0.0.1:11434:11434'
+    healthcheck:
+      test: ['CMD', 'ollama', 'list']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+  analyzer:
+    image: emailchecker-analyzer:local
+    build: .
+    environment:
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:4b}
+      AI_TIMEOUT: ${AI_TIMEOUT:-120}
+      REPUTATION_HASHES: ${REPUTATION_HASHES:-0}
+      REPUTATION_URLS: ${REPUTATION_URLS:-0}
+      VT_API_KEY: ${VT_API_KEY:-}
+      GSB_API_KEY: ${GSB_API_KEY:-}
+    volumes:
+      - ../datos/ejemplos:/app/samples:ro
+      - ../datos/resultados:/app/results
+    depends_on:
+      ollama:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    command: ['python', 'analizar.py']
   mailserver:
     image: ghcr.io/docker-mailserver/docker-mailserver@sha256:d0fe7668defe157aad57ea31b1707ad1e2fb57d7a91bdf17cbdf876549946c86
     hostname: mail.empresa.lab
+    networks:
+      default:
+        aliases: [mail.empresa.lab]
     environment:
       SSL_TYPE: manual
       SSL_CERT_PATH: /tmp/docker-mailserver/cert.pem
@@ -27,7 +68,7 @@ services:
       - mail:/var/mail
       - mail-state:/var/mail-state
       - mail-logs:/var/log/mail
-      - ./mail-config:/tmp/docker-mailserver
+      - ../datos/cuentas:/tmp/docker-mailserver
     restart: unless-stopped
     depends_on:
       milter:
@@ -48,14 +89,15 @@ services:
       retries: 5
       start_period: 180s
     volumes:
-      - ./results:/app/results
-    command: ['python', '-m', 'antiphishing.milter']
+      - ../datos/resultados:/app/results
+    command: ['python', 'servidor.py']
     read_only: true
     tmpfs: [/tmp]
     cap_drop: [ALL]
     security_opt: ['no-new-privileges:true']
     restart: unless-stopped
 volumes:
+  models:
   mail:
   mail-state:
   mail-logs:

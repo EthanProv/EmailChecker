@@ -1,8 +1,0 @@
-{
-  "01_legitimate": "sin_indicios_suficientes",
-  "02_attachment": "sin_indicios_suficientes",
-  "03_phishing": "sospechoso",
-  "04_mismatch": "sospechoso",
-  "05_injection": "sospechoso",
-  "06_mime": "sin_indicios_suficientes"
-}

@@ -5,10 +5,10 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-from antiphishing.parser import parse, MAX_MESSAGE, MAX_ATTACHMENT
-from antiphishing.ai import analyze, validate
-from antiphishing.policy import decide
-from antiphishing.reputation import Reputation
+from leer_correo import parse, MAX_MESSAGE, MAX_ATTACHMENT
+from inteligencia import analyze, validate
+from analizar import decidir as decide
+from reputacion import Reputation
 from email.message import EmailMessage
 
 class AnalyzerTests(unittest.TestCase):
@@ -56,38 +56,32 @@ class AnalyzerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate({**value, 'evidence': ['texto inventado']}, json.dumps({'text': text}))
 
-    def test_mock_ai_total_budget_includes_metadata(self):
-        budgets = []
+    def test_ai_uses_one_call_with_timeout(self):
+        calls = []
         def fake(base, path, payload=None, timeout=None):
-            budgets.append(timeout)
-            if path == '/api/tags':
-                return {'models': [{'name': 'qwen3:4b', 'digest': 'SIMULATED'}]}
-            if path == '/api/version':
-                return {'version': 'SIMULATED'}
+            calls.append((path, timeout))
             return {'message': {'content': json.dumps({'classification': 'sin_indicios_suficientes', 'reasons': ['SIMULATED'], 'evidence': []})}}
-        with patch.dict(os.environ, {'AI_TIMEOUT': '25'}), patch('antiphishing.ai.time.monotonic', side_effect=[0, 1, 8, 20]):
+        with patch.dict(os.environ, {'AI_TIMEOUT': '25'}):
             self.assertEqual(analyze(self.sample('01_legitimate'), fake)['status'], 'ok')
-        self.assertEqual(budgets, [10, 10, 5])
+        self.assertEqual(calls, [('/api/chat', 25)])
 
     def test_mock_invalid_reputation_never_clean(self):
         from io import BytesIO
         for provider, body in [('vt', {'data': {'attributes': {'last_analysis_stats': {}}}}), ('gsb', [])]:
-            with tempfile.TemporaryDirectory(dir='results') as folder, patch('urllib.request.urlopen', side_effect=lambda *a, **k: BytesIO(json.dumps(body).encode())), patch('antiphishing.reputation.time.sleep'):
+            with tempfile.TemporaryDirectory(dir='results') as folder, patch('urllib.request.urlopen', side_effect=lambda *a, **k: BytesIO(json.dumps(body).encode())), patch('reputacion.time.sleep'):
                 rep = Reputation(str(Path(folder) / 'cache.db'))
-                self.assertEqual(rep.query(provider, 'SIMULATED', 'https://test.example', {})['status'], 'unavailable')
+                self.assertEqual(rep.query(provider, 'https://test.example', {})['status'], 'unavailable')
                 rep.db.close()
 
     def test_mock_invalid_model_response(self):
         def fake(base, path, *args, **kwargs):
-            if path == '/api/tags':
-                return {'models': [{'name': 'qwen3:4b', 'digest': 'SIMULATED'}]}
-            if path == '/api/version':
-                return {'version': 'SIMULATED'}
             return {'message': {'content': 'NOT JSON'}}
         self.assertEqual(analyze(self.sample('01_legitimate'), fake)['status'], 'unavailable')
 
     def test_missing_model(self):
-        self.assertEqual(analyze(self.sample('01_legitimate'), lambda *a, **k: {'models': []})['status'], 'unavailable')
+        from urllib.error import HTTPError
+        with patch('inteligencia.urllib.request.urlopen', side_effect=HTTPError('http://localhost', 404, 'Modelo no encontrado', {}, None)):
+            self.assertEqual(analyze(self.sample('01_legitimate'))['status'], 'unavailable')
 
     def test_limits(self):
         self.assertIn('message_size_limit', parse(b'a' * (MAX_MESSAGE + 1))['incomplete'])
@@ -114,6 +108,81 @@ class AnalyzerTests(unittest.TestCase):
         with patch.dict(os.environ, {'OLLAMA_URL': 'https://ollama.com'}):
             self.assertEqual(analyze(self.sample('01_legitimate'))['error'], 'nonlocal_endpoint_or_model_rejected')
 
+
+import io
+import struct
+from servidor import Handler
+
+def packet(command, data=b''):
+    return struct.pack('!I', len(data) + 1) + command + data
+
+class MilterTests(unittest.TestCase):
+    def run_protocol(self, classification, audit_failure=False):
+        handler = Handler.__new__(Handler)
+        handler.rfile = io.BytesIO(packet(b'O', struct.pack('!III', 6, 0x20, 0)) + packet(b'M', b'<a@empresa.lab>\0') + packet(b'L', b'Subject\0Test\0') + packet(b'N') + packet(b'B', b'Hola') + packet(b'E') + packet(b'Q'))
+        handler.wfile = io.BytesIO()
+        ai = {'status': 'ok', 'classification': classification, 'reasons': ['SIMULATED TEST']}
+        # Only this test mocks inference and audit file operations.
+        with patch('analizar.analyze', return_value=ai), patch('servidor.Path') as path, patch('servidor.os.fsync'):
+            path.return_value.__truediv__.return_value.name = 'SIMULATED.json'
+            if audit_failure:
+                path.return_value.__truediv__.return_value.open.side_effect = OSError('SIMULATED DISK FAILURE')
+            handler.handle()
+        output = io.BytesIO(handler.wfile.getvalue())
+        commands = []
+        while prefix := output.read(4):
+            commands.append(output.read(struct.unpack('!I', prefix)[0])[:1])
+        return commands
+
+    def test_hold_action(self):
+        self.assertEqual(self.run_protocol('sospechoso')[-2:], [b'q', b'c'])
+
+    def test_allow_without_reinjection(self):
+        self.assertNotIn(b'q', self.run_protocol('sin_indicios_suficientes'))
+
+import contextlib
+
+from analizar import main, revisar_correo
+from analizar import crear_informe as render
+
+
+class CliTests(unittest.TestCase):
+    def test_report_escapes_mail_and_shows_ai_failure(self):
+        report = render([{'id': '<img src=x onerror=alert(1)>', 'decision': 'pendiente de revisión',
+                          'seconds': 1, 'reasons': ['<script>alert(1)</script>'],
+                          'ai': {'status': 'unavailable'}}])
+        self.assertNotIn('<script>', report)
+        self.assertNotIn('<img ', report)
+        self.assertIn('&lt;script&gt;', report)
+        self.assertIn('pendiente de revisión', report)
+
+    def test_empty_batch_is_clear_error(self):
+        with tempfile.TemporaryDirectory(dir='results') as folder:
+            with patch('sys.argv', ['emailchecker', folder]), contextlib.redirect_stderr(io.StringIO()) as error:
+                with self.assertRaises(SystemExit) as exc:
+                    main()
+                self.assertEqual(exc.exception.code, 2)
+                self.assertIn('carpeta esta vacia', error.getvalue())
+
+    def test_unavailable_ai_needs_review(self):
+        with patch('analizar.analyze', return_value={'status': 'unavailable', 'classification': 'indeterminado'}):
+            reputation = unittest.mock.Mock()
+            reputation.analyze.return_value = {'status': 'disabled_demo', 'items': []}
+            result = revisar_correo(Path('samples/01_legitimate.eml').read_bytes(), reputation)
+            self.assertEqual(result['ai']['status'], 'unavailable')
+            self.assertEqual(result['decision'], 'pendiente de revisión')
+
+    def test_audit_failure_blocks_delivery(self):
+        self.assertEqual(MilterTests().run_protocol('sin_indicios_suficientes', audit_failure=True)[-1], b't')
+
+    def test_known_mismatch_quarantined_without_calling_ai(self):
+        with patch('analizar.analyze', side_effect=AssertionError('No AI needed')):
+            reputation = unittest.mock.Mock()
+            reputation.analyze.return_value = {'status': 'disabled_demo', 'items': []}
+            result = revisar_correo(Path('samples/04_mismatch.eml').read_bytes(), reputation)
+            self.assertEqual(result['decision'], 'cuarentena')
+            self.assertEqual(result['ai']['status'], 'skipped_static')
+
+
 if __name__ == '__main__':
     unittest.main()
-

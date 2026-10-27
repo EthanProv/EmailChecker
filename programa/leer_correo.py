@@ -13,7 +13,10 @@ DOMAIN = re.compile(r'^(?:https?://)?(?:[\w-]+\.)+[a-zA-Z]{2,}(?::\d+)?(?:/\S*)?
 
 def host(value):
     try:
-        return (urlsplit(value if '://' in value else 'https://' + value).hostname or '').rstrip('.').encode('idna').decode().lower()
+        if '://' not in value:
+            value = 'https://' + value
+        name = urlsplit(value).hostname or ''
+        return name.rstrip('.').encode('idna').decode().lower()
     except (ValueError, UnicodeError):
         return ''
 
@@ -48,6 +51,7 @@ class HTML(HTMLParser):
             self.active = None
 
 def parse(raw):
+    """Leer cabeceras, texto, enlaces y hashes sin ejecutar el contenido."""
     result = {'headers': {}, 'text': '', 'html': '', 'urls': [], 'attachments': [], 'incomplete': []}
     if len(raw) > MAX_MESSAGE:
         result['incomplete'].append('message_size_limit')
@@ -76,7 +80,10 @@ def parse(raw):
             except (LookupError, UnicodeError):
                 content = data.decode('utf-8', errors='replace')
                 result['incomplete'].append('text_decode_fallback')
-            (htmls if part.get_content_type() == 'text/html' else texts).append(content)
+            if part.get_content_type() == 'text/html':
+                htmls.append(content)
+            else:
+                texts.append(content)
     html = HTML()
     html.feed('\n'.join(htmls))
     plain = '\n'.join(texts)
